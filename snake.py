@@ -20,6 +20,9 @@ class Snake(Thread):
 
         # Get screen dimensions
         height, width = screen.getmaxyx()
+        self.height = height
+        self.width = width
+
         logging.debug('Canvas dimensions: %s,%s', height, width)
 
         # Set snake head position to the middle of the screen
@@ -27,10 +30,14 @@ class Snake(Thread):
         self.x = width // 2
 
         self.body = []
+        self.rats = []
+
         self.body.append((self.y, self.x))
 
         for i in range(1, length):
             self.body.append((self.y + i, self.x))
+
+        self.add_rat()
 
         logging.debug('Initial Position: %s', self.body[0])
 
@@ -54,6 +61,8 @@ class Snake(Thread):
             logging.debug('Direction changed to: %s', self.direction)
 
     def move(self):
+        logging.debug('Snake length: %s, Rats: %s', len(self.body), len(self.rats))
+
         head, *tail = self.body
         previous = head
 
@@ -72,10 +81,41 @@ class Snake(Thread):
             self.body.append(previous)
             previous = point
 
-        logging.debug('Snake: %s', self.body)
+    def add_rat(self):
+        rat = (
+            randint(1, self.height - 1),
+            randint(1, self.width - 1)
+        )
+
+        if rat in self.rats:
+            self.add_rat()
+        else:
+            self.rats.append(rat)
+
+    def eat(self):
+        head = self.body[0]
+        last = self.body[-1]
+
+        if head in self.rats:
+            logging.debug('Yumy!')
+            self.rats.remove(head)
+
+            if self.direction == 'UP':
+                self.body.append((last[0] - 1, last[1]))
+            if self.direction == 'DOWN':
+                self.body.append((last[0] + 1, last[1]))
+            if self.direction == 'LEFT':
+                self.body.append((last[0], last[1] - 1))
+            if self.direction == 'RIGHT':
+                self.body.append((last[0], last[1] + 1))
+
+            self.add_rat()
 
     def get_snake(self):
         return self.body
+
+    def get_rats(self):
+        return self.rats
 
 
 def start_game(screen):
@@ -85,25 +125,28 @@ def start_game(screen):
 
     # body = "■"
     body = "X"
-    food = "◆"
+    food = "🐀"
 
     # Start input thread to catch all keypresses
-    controls = Snake(screen, length=10)
-    controls.daemon = True
-    controls.start()
+    snake = Snake(screen, length=10)
+    snake.daemon = True
+    snake.start()
 
-    logging.debug('Snake body: %s', controls.get_snake())
+    logging.debug('Snake body: %s', snake.get_snake())
 
     while True:
         screen.clear()
 
-        snake = controls.get_snake()
-
-        for point in snake:
+        for point in snake.get_snake():
             screen.addch(point[0], point[1], body)
 
+        for rat in snake.get_rats():
+            screen.addch(rat[0], rat[1], food)
+
+
         screen.refresh()
-        controls.move()
+        snake.move()
+        snake.eat()
 
         time.sleep(0.1)
 
