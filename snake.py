@@ -13,20 +13,26 @@ logging.basicConfig(
     datefmt='%d-%m-%Y %H:%M:%S'
 )
 
-class SnakeControls(Thread):
-    def __init__(self, screen, position):
+class Snake(Thread):
+    def __init__(self, screen, length=10):
         self.screen = screen
-        self.position = position
         self.direction = 'UP'
 
-        self.y = position[0]
-        self.x = position[1]
+        # Get screen dimensions
+        height, width = screen.getmaxyx()
+        logging.debug('Canvas dimensions: %s,%s', height, width)
 
-        self.body = [self.position]
+        # Set snake head position to the middle of the screen
+        self.y = height // 2
+        self.x = width // 2
 
-        self.body.append((self.y + 1, self.x))
-        self.body.append((self.y + 2, self.x))
-        self.body.append((self.y + 3, self.x))
+        self.body = []
+        self.body.append((self.y, self.x))
+
+        for i in range(1, length):
+            self.body.append((self.y + i, self.x))
+
+        logging.debug('Initial Position: %s', self.body[0])
 
         Thread.__init__(self)
 
@@ -35,7 +41,6 @@ class SnakeControls(Thread):
 
         while True:
             self.key = self.screen.getch()
-            # logging.debug('Pressed key: %s', self.key)
 
             if self.key == curses.KEY_UP:
                 self.direction = 'UP'
@@ -48,39 +53,42 @@ class SnakeControls(Thread):
 
             logging.debug('Direction changed to: %s', self.direction)
 
-    def get_position(self):
-        return (self.y, self.x)
+    def move(self):
+        head, *tail = self.body
+        previous = head
+
+        if self.direction == 'UP':
+            head = (head[0] - 1, head[1])
+        elif self.direction == 'LEFT':
+            head = (head[0], head[1] - 1)
+        elif self.direction == 'RIGHT':
+            head = (head[0], head[1] + 1)
+        elif self.direction == 'DOWN':
+            head = (head[0] + 1, head[1])
+
+        self.body = [head]
+
+        for point in tail:
+            self.body.append(previous)
+            previous = point
+
+        logging.debug('Snake: %s', self.body)
 
     def get_snake(self):
         return self.body
 
-    def move(self):
-        if self.direction == 'UP':
-            self.body = list(map(lambda x: (x[0] - 1, x[1]), self.body))
-        elif self.direction == 'LEFT':
-            self.body = list(map(lambda x: (x[0], x[1] - 1), self.body))
 
 def start_game(screen):
     curses.curs_set(0)
     screen.clear()
     screen.refresh()
 
-    # Body
     # body = "■"
     body = "X"
     food = "◆"
 
-    height, width = screen.getmaxyx()
-    logging.debug('Canvas dimensions: %s,%s', height, width)
-
-    # Set random initial position (y, x)
-    # position = (randint(1, height - 1), randint(1, width - 1))
-    position = (height // 2, width // 2)
-
-    logging.debug('Initial Position: %s', position)
-
     # Start input thread to catch all keypresses
-    controls = SnakeControls(screen, position)
+    controls = Snake(screen, length=10)
     controls.daemon = True
     controls.start()
 
@@ -97,7 +105,7 @@ def start_game(screen):
         screen.refresh()
         controls.move()
 
-        time.sleep(0.6)
+        time.sleep(0.1)
 
 def main():
     curses.wrapper(start_game)
