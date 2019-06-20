@@ -48,6 +48,10 @@ class Snake(Thread):
 
         while True:
             self.key = self.screen.getch()
+            # logging.debug('Key: %s', self.key)
+
+            if self.key == 114:
+                logging.debug('Restart!')
 
             if self.key == curses.KEY_UP:
                 self.direction = 'UP'
@@ -111,6 +115,11 @@ class Snake(Thread):
 
             self.add_rat()
 
+    def check_collision(self):
+        head, *tail = self.body
+        if head in tail:
+            raise Exception('Collision with self')
+
     def get_snake(self):
         return self.body
 
@@ -128,7 +137,7 @@ def start_game(screen):
     food = "🐀"
 
     # Start input thread to catch all keypresses
-    snake = Snake(screen, length=10)
+    snake = Snake(screen, length=8)
     snake.daemon = True
     snake.start()
 
@@ -143,9 +152,9 @@ def start_game(screen):
         for rat in snake.get_rats():
             screen.addch(rat[0], rat[1], food)
 
-
         screen.refresh()
         snake.move()
+        snake.check_collision()
         snake.eat()
 
         time.sleep(0.1)
