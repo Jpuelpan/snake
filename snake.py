@@ -56,7 +56,7 @@ class Snake(Thread):
 
         while True:
             self.key = self.screen.getch()
-            logging.debug('Key: %s', self.key)
+            # logging.debug('Key: %s', self.key)
 
             # Check for 'r' key and restart game
             if self.key == 114:
@@ -96,7 +96,6 @@ class Snake(Thread):
 
     def move(self):
         # logging.debug('Snake length: %s, Rats: %s', len(self.body), len(self.rats))
-
         if self.pause:
             return
 
@@ -114,13 +113,12 @@ class Snake(Thread):
 
         if head == tail[0]:
             self.direction = self.previous_direction
-            return
+        else:
+            self.body = [head]
 
-        self.body = [head]
-
-        for point in tail:
-            self.body.append(previous)
-            previous = point
+            for point in tail:
+                self.body.append(previous)
+                previous = point
 
     def add_rat(self):
         rat = (
@@ -136,18 +134,20 @@ class Snake(Thread):
     def eat(self):
         head = self.body[0]
         last = self.body[-1]
+        tip = self.body[-2:]
+        tail_direction = (tip[0][0] - tip[1][0], tip[0][1] - tip[1][1])
 
         if head in self.rats:
             logging.debug('Yumy!')
             self.rats.remove(head)
 
-            if self.direction == DIR_UP:
+            if tail_direction == (-1, 0):
                 self.body.append((last[0] - 1, last[1]))
-            if self.direction == DIR_DOWN:
+            if tail_direction == (1, 0):
                 self.body.append((last[0] + 1, last[1]))
-            if self.direction == DIR_LEFT:
+            if tail_direction == (0, -1):
                 self.body.append((last[0], last[1] - 1))
-            if self.direction == DIR_RIGHT:
+            if tail_direction == (0, 1):
                 self.body.append((last[0], last[1] + 1))
 
             self.add_rat()
@@ -155,7 +155,7 @@ class Snake(Thread):
     def check_collision(self):
         head, *tail = self.body
         if head in tail:
-            raise Exception('Collision with self')
+            raise Exception('Your snake crashed')
 
     def get_snake(self):
         return self.body
