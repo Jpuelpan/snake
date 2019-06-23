@@ -1,4 +1,4 @@
-# Snake game on python curses
+# Snake 🐍🐍🐍
 
 Snake game using the curses library
 
@@ -6,9 +6,9 @@ Snake game using the curses library
 
 * [X] Basic movement!!
 * [X] Feed snake 🐀
-* [ ] Draw borders
-* [ ] Detect collisions with self
+* [X] Draw borders
+* [X] Detect collisions with self
 * [ ] Detect collisions with borders
-* [ ] Score counter
-* [ ] Pause/Resume game
+* [X] Score counter
+* [X] Pause/Resume game
 

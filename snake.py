@@ -154,7 +154,7 @@ class Snake(Thread):
             if tail_direction == (0, 1):
                 self.body.append((last[0], last[1] + 1))
 
-            self.score = self.score + 1
+            self.score = self.score + 10
             self.add_rat()
 
     def check_collision(self):
@@ -178,7 +178,7 @@ def start_game(screen):
     food = "🐀"
 
     max_height, max_width = screen.getmaxyx()
-    scoreboard = curses.newwin(4, max_width, 0, 0)
+    scoreboard = curses.newwin(3, max_width, 0, 0)
     scoreboard_height, w = scoreboard.getmaxyx()
 
     playground = curses.newwin(
@@ -198,7 +198,6 @@ def start_game(screen):
     snake.daemon = True
     snake.start()
 
-
     while True:
         playground.erase()
         scoreboard.erase()
@@ -216,7 +215,7 @@ def start_game(screen):
         snake.check_collision()
         snake.eat()
 
-        scoreboard.addstr(0, 0, str(snake.score))
+        scoreboard.addstr(1, 2, "Score: %s" % str(snake.score))
 
         scoreboard.noutrefresh()
         playground.noutrefresh()
