@@ -2,6 +2,8 @@
 
 Snake game using the curses library
 
+![Snake](https://github.com/Jpuelpan/snake/blob/master/snake.png)
+
 **TODO**
 
 * [X] Basic movement!!
