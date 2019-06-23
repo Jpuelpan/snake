@@ -19,15 +19,18 @@ DIR_DOWN = 'DOWN'
 DIR_RIGHT = 'RIGHT'
 
 class Snake(Thread):
-    def __init__(self, screen, length=10):
+    def __init__(self, screen=None, playground=None, length=10):
         self.screen = screen
+        self.playground = playground
+
+        self.score = 0
         self.direction = DIR_UP
         self.previous_direction = DIR_UP
         self.length = length
         self.pause = False
 
-        # Get screen dimensions
-        height, width = screen.getmaxyx()
+        # Get board dimensions
+        height, width = playground.getmaxyx()
         self.height = height
         self.width = width
 
@@ -47,7 +50,7 @@ class Snake(Thread):
 
         self.add_rat()
 
-        logging.debug('Initial Position: %s', self.body[0])
+        # logging.debug('Initial Position: %s', self.body[0])
 
         Thread.__init__(self)
 
@@ -77,7 +80,7 @@ class Snake(Thread):
             elif self.key == curses.KEY_RIGHT:
                 self.direction = DIR_RIGHT
 
-            logging.debug('Direction changed to: %s', self.direction)
+            # logging.debug('Direction changed to: %s', self.direction)
 
     def restart(self):
         logging.debug('Restarting...')
@@ -85,6 +88,7 @@ class Snake(Thread):
 
         self.body = []
         self.rats = []
+        self.score = 0
 
         self.body.append((self.y, self.x))
 
@@ -150,6 +154,7 @@ class Snake(Thread):
             if tail_direction == (0, 1):
                 self.body.append((last[0], last[1] + 1))
 
+            self.score = self.score + 1
             self.add_rat()
 
     def check_collision(self):
@@ -169,30 +174,53 @@ def start_game(screen):
     screen.clear()
     screen.refresh()
 
-    # body = "■"
     body = "X"
     food = "🐀"
 
+    max_height, max_width = screen.getmaxyx()
+    scoreboard = curses.newwin(4, max_width, 0, 0)
+    scoreboard_height, w = scoreboard.getmaxyx()
+
+    playground = curses.newwin(
+        max_height - scoreboard_height,
+        max_width,
+        scoreboard_height,
+        0
+    )
+
     # Start input thread to catch all keypresses
-    snake = Snake(screen, length=8)
+    snake = Snake(
+        screen=screen,
+        playground=playground,
+        length=3
+    )
+
     snake.daemon = True
     snake.start()
 
-    logging.debug('Snake body: %s', snake.get_snake())
 
     while True:
-        screen.clear()
+        playground.erase()
+        scoreboard.erase()
+
+        playground.border()
+        scoreboard.border()
 
         for point in snake.get_snake():
-            screen.addch(point[0], point[1], body)
+            playground.addch(point[0], point[1], body)
 
         for rat in snake.get_rats():
-            screen.addch(rat[0], rat[1], food)
+            playground.addch(rat[0], rat[1], food)
 
-        screen.refresh()
         snake.move()
         snake.check_collision()
         snake.eat()
+
+        scoreboard.addstr(0, 0, str(snake.score))
+
+        scoreboard.noutrefresh()
+        playground.noutrefresh()
+        curses.doupdate()
 
         time.sleep(0.1)
 
