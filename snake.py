@@ -130,7 +130,9 @@ class Snake(Thread):
             randint(1, self.width - 1)
         )
 
-        if rat in self.rats:
+        # Check rat is not positioned on another rat or
+        # on top of the snake body
+        if rat in self.rats or rat in self.body:
             self.add_rat()
         else:
             self.rats.append(rat)
@@ -155,7 +157,12 @@ class Snake(Thread):
                 self.body.append((last[0], last[1] + 1))
 
             self.score = self.score + 10
-            self.add_rat()
+
+            if len(self.rats) == 0:
+                self.add_rat()
+
+                if self.score > 100:
+                    self.add_rat()
 
     def check_collision(self):
         head, *tail = self.body
