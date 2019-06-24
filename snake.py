@@ -50,7 +50,7 @@ class Snake(Thread):
 
         self.add_rat()
 
-        # logging.debug('Initial Position: %s', self.body[0])
+        logging.debug('Initial Position: %s', self.body[0])
 
         Thread.__init__(self)
 
@@ -59,7 +59,7 @@ class Snake(Thread):
 
         while True:
             self.key = self.screen.getch()
-            # logging.debug('Key: %s', self.key)
+            logging.debug('Key: %s', self.key)
 
             # Check for 'r' key and restart game
             if self.key == 114:
@@ -80,10 +80,10 @@ class Snake(Thread):
             elif self.key == curses.KEY_RIGHT:
                 self.direction = DIR_RIGHT
 
-            # logging.debug('Direction changed to: %s', self.direction)
+            logging.debug('Direction changed to: %s', self.direction)
 
     def restart(self):
-        logging.debug('Restarting...')
+        logging.debug('Restarting game!')
         self.direction = DIR_UP
 
         self.body = []
@@ -99,7 +99,8 @@ class Snake(Thread):
         self.pause = False
 
     def move(self):
-        # logging.debug('Snake length: %s, Rats: %s', len(self.body), len(self.rats))
+        logging.debug('Snake length: %s, Rats: %s', len(self.body), len(self.rats))
+
         if self.pause:
             return
 
@@ -126,8 +127,8 @@ class Snake(Thread):
 
     def add_rat(self):
         rat = (
-            randint(1, self.height - 1),
-            randint(1, self.width - 1)
+            randint(1, self.height - 2),
+            randint(1, self.width - 2)
         )
 
         # Check rat is not positioned on another rat or
@@ -166,8 +167,21 @@ class Snake(Thread):
 
     def check_collision(self):
         head, *tail = self.body
+        curr_y, curr_x = head
+
+        # Check collision in x axis
+        if curr_x == 0 or curr_x == (self.width - 1):
+            # self.pause = True
+            self.restart()
+
+        # Check collision in y axis
+        if curr_y == 0 or curr_y == (self.height - 1):
+            # self.pause = True
+            self.restart()
+
         if head in tail:
-            raise Exception('Your snake crashed')
+            self.restart()
+            # raise Exception('Your snake crashed')
 
     def get_snake(self):
         return self.body
@@ -199,7 +213,7 @@ def start_game(screen):
     snake = Snake(
         screen=screen,
         playground=playground,
-        length=3
+        length=5
     )
 
     snake.daemon = True
